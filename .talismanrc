@@ -9,7 +9,7 @@ fileignoreconfig:
 - filename: package.json
   checksum: 5b4fcb5ddc7cc96cc2d1733b544d56ea66e88cdab995a1052fbf9ac0e9c2dc21
 - filename: lib/jsonld-signatures/suites/ed255192018/ed25519.ts
-  checksum: 493b6e31144116cb612c24d98b97d8adcad5609c0a52c865a6847ced0a0ddc3a
+  checksum: c6891caf536f0d47b698b3852a3b7999f8a0e01e9182e482bd162b3858357a3d
 - filename: i18n.ts
   checksum: e80d40f33692c195d034774d024cafdf63d010ac6d4a35f94b2a5d81b78c234b
 - filename: components/Passcode.tsx

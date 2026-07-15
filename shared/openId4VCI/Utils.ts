@@ -767,6 +767,7 @@ export async function verifyCredentialData(
     credential,
     credentialFormat,
   );
+
   return verificationResult;
 }
 function resolveEd25519Alg(proofSigningAlgosSupported: string[]) {

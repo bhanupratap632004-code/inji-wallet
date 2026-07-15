@@ -71,9 +71,10 @@ const api = {
     return signature;
   },
   async verify(publicKeyBytes: Uint8Array, data: string, signature: string) {
-    const publicKey = await createForgePublicKeyFromPublicKeyBuffer(
-      _publicKeyDerEncode({publicKeyBytes}),
-    );
+    const der = _publicKeyDerEncode({publicKeyBytes});
+
+    const publicKey = createForgePublicKeyFromPublicKeyBuffer(der);
+
     return forgeVerifyEd25519(data, publicKey, signature);
   },
 };
@@ -100,11 +101,8 @@ function createForgePublicKeyFromPrivateKeyBuffer(
 
 function createForgePublicKeyFromPublicKeyBuffer(
   publicKeyBuffer: Buffer,
-): string {
-  const publicKeyObject = publicKeyFromAsn1(fromDer(publicKeyBuffer));
-  const publicKeyDer = toDer(publicKeyToAsn1(publicKeyObject)).getBytes();
-
-  return publicKeyDer;
+): Uint8Array {
+  return Buffer.from(getKeyMaterial(publicKeyBuffer));
 }
 
 function forgeSign(data: string, privateKeyObject: PrivateKey): string {
@@ -123,7 +121,7 @@ function forgeSign(data: string, privateKeyObject: PrivateKey): string {
 
 function forgeVerifyEd25519(
   data: string,
-  publicKey: string,
+  publicKey: Uint8Array,
   signature: string,
 ): boolean {
   return ed25519.verify({
