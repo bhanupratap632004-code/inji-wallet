@@ -1,9 +1,9 @@
-import jsonld from '@digitalcredentials/jsonld';
 import vcjs from '@digitalcredentials/vc';
 import {RsaSignature2018} from '../../lib/jsonld-signatures/suites/rsa2018/RsaSignature2018';
 import {Ed25519Signature2018} from '../../lib/jsonld-signatures/suites/ed255192018/Ed25519Signature2018';
 import {AssertionProofPurpose} from '../../lib/jsonld-signatures/purposes/AssertionProofPurpose';
 import {PublicKeyProofPurpose} from '../../lib/jsonld-signatures/purposes/PublicKeyProofPurpose';
+import {DocumentLoader} from './DocumentLoader';
 import {
   Credential,
   VerifiableCredential,
@@ -34,61 +34,6 @@ const ProofPurpose = {
 };
 
 const vcVerifier = NativeModules.VCVerifierModule;
-
-const defaultLoader = jsonld.documentLoaders.xhr();
-
-async function httpsLoader(url: string) {
-  console.log('[HTTPS_LOADER] Fetching:', url);
-
-  const result = await defaultLoader(url);
-
-  // xhr loader returns JSON as string on React Native
-  if (typeof result.document === 'string') {
-    try {
-      result.document = JSON.parse(result.document);
-    } catch (_) {}
-  }
-
-  console.log('[HTTPS_LOADER] Success:', url);
-
-  return result;
-}
-
-async function didWebAwareDocumentLoader(url: string) {
-  console.log('[DOC_LOADER] Request:', url);
-
-  // normal HTTP/HTTPS URLs
-  if (url.startsWith('http://') || url.startsWith('https://')) {
-    return httpsLoader(url);
-  }
-
-  // did:web
-  if (url.startsWith('did:web:')) {
-    const didWithoutFragment = url.split('#')[0];
-
-    const domain = didWithoutFragment.replace('did:web:', '');
-
-    const didUrl = `https://${domain}/.well-known/did.json`;
-
-    console.log('[DOC_LOADER] Resolving DID:', didUrl);
-
-    try {
-      const response = await httpsLoader(didUrl);
-
-      console.log('DID_DOCUMENT', JSON.stringify(response.document, null, 2));
-
-      response.documentUrl = url;
-
-      console.log('[DOC_LOADER] DID resolved successfully');
-
-      return response;
-    } catch (e) {
-      console.log('[DOC_LOADER] DID resolution failed:', e);
-      throw e;
-    }
-  }
-  throw new Error(`Unsupported URL: ${url}`);
-}
 
 export async function verifyCredential(
   verifiableCredential: Credential,
@@ -156,7 +101,7 @@ async function verifyCredentialForIos(
       purpose,
       suite,
       credential: verifiableCredential,
-      documentLoader: didWebAwareDocumentLoader,
+      documentLoader: DocumentLoader.didWebDocumentLoader,
     };
     const result = await vcjs.verifyCredential(vcjsOptions);
     verificationResponse = handleResponse(result, verifiableCredential);
