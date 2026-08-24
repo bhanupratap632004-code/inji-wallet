@@ -11,7 +11,18 @@ export class DocumentLoader {
     if (typeof result.document === 'string') {
       try {
         result.document = JSON.parse(result.document);
-      } catch (_) {}
+      } catch (error) {
+        throw new Error(
+          `Failed to parse JSON document from ${url}: ${String(error)}`,
+        );
+      }
+    } else if (
+      typeof result.document !== 'object' ||
+      result.document === null
+    ) {
+      throw new Error(
+        `Unsupported document type for ${url}: ${typeof result.document}`,
+      );
     }
 
     console.info('[HTTPS_LOADER] Success:', url);
@@ -55,9 +66,9 @@ export class DocumentLoader {
         console.info('[DOC_LOADER] DID resolved successfully');
 
         return response;
-      } catch (e) {
-        console.error('[DOC_LOADER] DID resolution failed:', e);
-        throw e;
+      } catch (error) {
+        console.error('[DOC_LOADER] DID resolution failed:', error);
+        throw error;
       }
     }
 
