@@ -90,6 +90,20 @@ describe('DocumentLoader', () => {
       );
     });
 
+    it('should resolve did:web DID with a port', async () => {
+      mockLoader.mockResolvedValue({
+        document: {
+          id: 'did:web:localhost%3A8080',
+        },
+      });
+
+      await DocumentLoader.didWebDocumentLoader('did:web:localhost%3A8080');
+
+      expect(mockLoader).toHaveBeenCalledWith(
+        'https://localhost:8080/.well-known/did.json',
+      );
+    });
+
     it('should ignore fragment while resolving DID', async () => {
       mockLoader.mockResolvedValue({
         document: {
@@ -106,6 +120,58 @@ describe('DocumentLoader', () => {
       );
 
       expect(result.documentUrl).toBe('did:web:example.com#key-1');
+    });
+
+    it('should ignore query while resolving DID', async () => {
+      mockLoader.mockResolvedValue({
+        document: {
+          id: 'did:web:example.com',
+        },
+      });
+
+      await DocumentLoader.didWebDocumentLoader('did:web:example.com?foo=bar');
+
+      expect(mockLoader).toHaveBeenCalledWith(
+        'https://example.com/.well-known/did.json',
+      );
+    });
+
+    it('should load a plain https URL', async () => {
+      mockLoader.mockResolvedValue({
+        document: {
+          id: 'did:web:example.com',
+        },
+      });
+
+      const result = await DocumentLoader.didWebDocumentLoader(
+        'https://example.com/did.json',
+      );
+
+      expect(mockLoader).toHaveBeenCalledWith('https://example.com/did.json');
+
+      expect(result.document).toEqual({
+        id: 'did:web:example.com',
+      });
+    });
+
+    it('should throw for malformed did:web URL', async () => {
+      await expect(
+        DocumentLoader.didWebDocumentLoader('did:web:'),
+      ).rejects.toThrow('Invalid did:web URL: did:web:');
+    });
+
+    it('should throw when did:web URL has an empty domain', async () => {
+      await expect(
+        DocumentLoader.didWebDocumentLoader('did:web::user'),
+      ).rejects.toThrow('Invalid did:web URL: missing domain in did:web::user');
+    });
+
+    it('should reject http URLs', async () => {
+      await expect(
+        DocumentLoader.didWebDocumentLoader('http://example.com/did.json'),
+      ).rejects.toThrow('Unsupported URL: http://example.com/did.json');
+
+      expect(mockLoader).not.toHaveBeenCalled();
     });
 
     it('should propagate loader errors', async () => {

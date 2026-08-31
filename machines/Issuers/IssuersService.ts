@@ -382,25 +382,23 @@ export const IssuersService = () => {
       return context.keyType;
     },
 
-verifyCredential: async (context: any): Promise<VerificationResult> => {
-  const {verifiableCredential, selectedCredentialType} = context;
+    verifyCredential: async (context: any): Promise<VerificationResult> => {
+      const {verifiableCredential, selectedCredentialType} = context;
+      const verificationResult = await verifyCredentialData(
+        verifiableCredential?.credential,
+        selectedCredentialType.format,
+      );
+      if (!verificationResult.isVerified) {
+        console.error(
+          'Credential verification failed with error code: ',
+          verificationResult.verificationErrorCode,
+          'and message: ',
+          verificationResult.verificationMessage,
+        );
+        throw new Error(verificationResult.verificationErrorCode);
+      }
 
-  const verificationResult = await verifyCredentialData(
-    verifiableCredential?.credential,
-    selectedCredentialType.format,
-  );
-
-  if (!verificationResult.isVerified) {
-    console.error(
-      'Credential verification failed with error code: ',
-      verificationResult.verificationErrorCode,
-      'and message: ',
-      verificationResult.verificationMessage,
-    );
-    throw new Error(verificationResult.verificationErrorCode);
-  }
-
-  return verificationResult;
-},
+      return verificationResult;
+    },
   };
 };

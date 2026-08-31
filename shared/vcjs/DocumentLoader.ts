@@ -33,17 +33,27 @@ export class DocumentLoader {
   static async didWebDocumentLoader(url: string) {
     console.info('[DOC_LOADER] Request:', url);
 
-    if (url.startsWith('http://') || url.startsWith('https://')) {
+    if (url.startsWith('https://')) {
       return DocumentLoader.httpsLoader(url);
     }
 
     if (url.startsWith('did:web:')) {
-      const didWithoutFragment = url.split('#')[0];
+      const didWithoutFragmentAndQuery = url.split(/[?#]/)[0];
 
-      const did = didWithoutFragment.replace('did:web:', '');
+      const did = didWithoutFragmentAndQuery.replace('did:web:', '');
 
-      const components = did.split(':');
+      if (!did) {
+        throw new Error(`Invalid did:web URL: ${url}`);
+      }
+
+      const components = did.split(':').map(decodeURIComponent);
+
       const baseDomain = components[0];
+
+      if (!baseDomain) {
+        throw new Error(`Invalid did:web URL: missing domain in ${url}`);
+      }
+
       const path = components.slice(1).join('/');
 
       const didUrl =
