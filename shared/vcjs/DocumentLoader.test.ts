@@ -104,6 +104,20 @@ describe('DocumentLoader', () => {
       );
     });
 
+    it('should throw when resolved DID document id does not match requested DID', async () => {
+      mockLoader.mockResolvedValue({
+        document: {
+          id: 'did:web:different.com',
+        },
+      });
+
+      await expect(
+        DocumentLoader.didWebDocumentLoader('did:web:example.com'),
+      ).rejects.toThrow(
+        'Resolved DID document id does not match did:web:example.com',
+      );
+    });
+
     it('should ignore fragment while resolving DID', async () => {
       mockLoader.mockResolvedValue({
         document: {

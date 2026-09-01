@@ -66,6 +66,12 @@ export class DocumentLoader {
       try {
         const response = await DocumentLoader.httpsLoader(didUrl);
 
+        if (response.document.id !== didWithoutFragmentAndQuery) {
+          throw new Error(
+            `Resolved DID document id does not match ${didWithoutFragmentAndQuery}`,
+          );
+        }
+
         console.info(
           'DID_DOCUMENT',
           JSON.stringify(response.document, null, 2),
