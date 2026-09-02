@@ -1,12 +1,22 @@
 import jsonld from '@digitalcredentials/jsonld';
 
-const defaultLoader = jsonld.documentLoaders.xhr();
-
 export class DocumentLoader {
+  private static defaultLoader: ReturnType<
+    typeof jsonld.documentLoaders.xhr
+  > | null = null;
+
+  private static getDefaultLoader() {
+    if (!DocumentLoader.defaultLoader) {
+      DocumentLoader.defaultLoader = jsonld.documentLoaders.xhr();
+    }
+
+    return DocumentLoader.defaultLoader;
+  }
+
   private static async httpsLoader(url: string) {
     console.info('[HTTPS_LOADER] Fetching:', url);
 
-    const result = await defaultLoader(url);
+    const result = await DocumentLoader.getDefaultLoader()(url);
 
     if (typeof result.document === 'string') {
       try {
@@ -39,7 +49,6 @@ export class DocumentLoader {
 
     if (url.startsWith('did:web:')) {
       const didWithoutFragmentAndQuery = url.split(/[?#]/)[0];
-
       const did = didWithoutFragmentAndQuery.replace('did:web:', '');
 
       if (!did) {
@@ -47,7 +56,6 @@ export class DocumentLoader {
       }
 
       const components = did.split(':').map(decodeURIComponent);
-
       const baseDomain = components[0];
 
       if (!baseDomain) {
@@ -55,7 +63,6 @@ export class DocumentLoader {
       }
 
       const path = components.slice(1).join('/');
-
       const didUrl =
         path.length === 0
           ? `https://${baseDomain}/.well-known/did.json`
