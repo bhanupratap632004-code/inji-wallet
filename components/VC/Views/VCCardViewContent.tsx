@@ -34,27 +34,27 @@ import testIDProps from '../../../shared/commonUtil';
 import {ClaimVisibility, flattenSdJwt} from '../common/VCProcessor';
 
 export const VCCardViewContent: React.FC<VCItemContentProps> = ({
-                                                                  isPinned = false,
-                                                                  credential,
-                                                                  verifiableCredentialData,
-                                                                  wellknown,
-                                                                  selectable,
-                                                                  selected,
-                                                                  disableSelection = false,
-                                                                  minimalDisclosure,
-                                                                  selectionType = CheckboxSelectionType.SINGLE,
-                                                                  service,
-                                                                  onPress,
-                                                                  flow,
-                                                                  walletBindingResponse,
-                                                                  KEBAB_POPUP,
-                                                                  DISMISS,
-                                                                  isKebabPopUp,
-                                                                  vcMetadata,
-                                                                  isInitialLaunch,
-                                                                  claimsPath,
-                                                                  onDisclosuresChange,
-                                                                }) => {
+  isPinned = false,
+  credential,
+  verifiableCredentialData,
+  wellknown,
+  selectable,
+  selected,
+  disableSelection = false,
+  minimalDisclosure,
+  selectionType = CheckboxSelectionType.SINGLE,
+  service,
+  onPress,
+  flow,
+  walletBindingResponse,
+  KEBAB_POPUP,
+  DISMISS,
+  isKebabPopUp,
+  vcMetadata,
+  isInitialLaunch,
+  claimsPath,
+  onDisclosuresChange,
+}) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [selectedFields, setSelectedFields] = useState<Record<string, boolean>>(
     {},
@@ -107,14 +107,14 @@ export const VCCardViewContent: React.FC<VCItemContentProps> = ({
       React.SetStateAction<Record<string, boolean>>
     >;
   }> = ({
-          name,
-          node,
-          fullPath,
-          expandedNodes,
-          setExpandedNodes,
-          selected = undefined,
-          lockSelection = false,
-        }) => {
+    name,
+    node,
+    fullPath,
+    expandedNodes,
+    setExpandedNodes,
+    selected = undefined,
+    lockSelection = false,
+  }) => {
     const isExpanded = expandedNodes[fullPath] || false;
 
     const toggleExpand = () => {
@@ -144,9 +144,12 @@ export const VCCardViewContent: React.FC<VCItemContentProps> = ({
                 disabled={node.visibility === ClaimVisibility.PUBLIC}
               />
             )}
-            <Text weight="semibold"
-                  color={wellknownDisplayProperty.getTextColor(Theme.Colors.Details)}
-                  style={{marginLeft: 8}}>
+            <Text
+              weight="semibold"
+              color={wellknownDisplayProperty.getTextColor(
+                Theme.Colors.Details,
+              )}
+              style={{marginLeft: 8}}>
               {formatKeyLabel(name)}
             </Text>
           </Row>
@@ -329,14 +332,26 @@ export const VCCardViewContent: React.FC<VCItemContentProps> = ({
                 }}
               />
               <Column>
-                <Text style={[Theme.Styles.disclosureTitle, {color: wellknownDisplayProperty.getTextColor(
-                    Theme.Colors.Details,
-                  )}]}>
+                <Text
+                  style={[
+                    Theme.Styles.disclosureTitle,
+                    {
+                      color: wellknownDisplayProperty.getTextColor(
+                        Theme.Colors.Details,
+                      ),
+                    },
+                  ]}>
                   {t('SendVPScreen:selectedFieldsTitle')}
                 </Text>
-                <Text style={[Theme.Styles.disclosureSubtitle, {color: wellknownDisplayProperty.getTextColor(
-                    Theme.Colors.Details,
-                  )}]}>
+                <Text
+                  style={[
+                    Theme.Styles.disclosureSubtitle,
+                    {
+                      color: wellknownDisplayProperty.getTextColor(
+                        Theme.Colors.Details,
+                      ),
+                    },
+                  ]}>
                   {t('SendVPScreen:selectedFieldsSubtitle')}
                 </Text>
               </Column>
@@ -362,44 +377,40 @@ export const VCCardViewContent: React.FC<VCItemContentProps> = ({
             <Fragment>
               {claimsPath
                 ? Object.entries(
-                  buildDisclosureTree(
-                    flattenSdJwt({
-                      eligiblePaths: claimsPath,
-                      disclosedKeys: credential.disclosedKeys,
-                      fullResolvedPayload: credential.fullResolvedPayload,
-                    }),
-                  ),
-                ).map(([name, node]: [string, any]) => (
-                  <DisclosureNode
-                    selected={claimsPath ? selected : undefined}
-                    lockSelection={!!claimsPath}
-                    key={name}
-                    name={name}
-                    node={node}
-                    fullPath={name}
-                    expandedNodes={expandedNodes}
-                    setExpandedNodes={setExpandedNodes}
-                  />
-                ))
+                    buildDisclosureTree(
+                      flattenSdJwt(getFlattenInput(credential, claimsPath)),
+                    ),
+                  ).map(([name, node]: [string, any]) => (
+                    <DisclosureNode
+                      selected={claimsPath ? selected : undefined}
+                      lockSelection={!!claimsPath}
+                      key={name}
+                      name={name}
+                      node={node}
+                      fullPath={name}
+                      expandedNodes={expandedNodes}
+                      setExpandedNodes={setExpandedNodes}
+                    />
+                  ))
                 : Object.entries(
-                  buildDisclosureTreeForDisclosedClaims(
-                    credential.disclosedKeys,
-                  ),
-                ).map(([name, node]) => (
-                  <DisclosureNode
-                    key={name}
-                    name={name}
-                    node={node}
-                    fullPath={name}
-                    expandedNodes={expandedNodes}
-                    setExpandedNodes={setExpandedNodes}
-                  />
-                ))}
+                    buildDisclosureTreeForDisclosedClaims(
+                      credential.disclosedKeys,
+                    ),
+                  ).map(([name, node]) => (
+                    <DisclosureNode
+                      key={name}
+                      name={name}
+                      node={node}
+                      fullPath={name}
+                      expandedNodes={expandedNodes}
+                      setExpandedNodes={setExpandedNodes}
+                    />
+                  ))}
             </Fragment>
           </Column>
         )}
 
-        <WalletBinding service={service} vcMetadata={vcMetadata}/>
+        <WalletBinding service={service} vcMetadata={vcMetadata} />
 
         <RemoveVcWarningOverlay
           testID="removeVcWarningOverlay"
@@ -407,7 +418,7 @@ export const VCCardViewContent: React.FC<VCItemContentProps> = ({
           vcMetadata={vcMetadata}
         />
 
-        <HistoryTab service={service} vcMetadata={vcMetadata}/>
+        <HistoryTab service={service} vcMetadata={vcMetadata} />
       </View>
     </ImageBackground>
   );
@@ -421,7 +432,7 @@ type DisclosureData = {
 };
 
 function buildDisclosureTree(
-  flattened: Record<string, { visibility: ClaimVisibility; value: unknown }>,
+  flattened: Record<string, {visibility: ClaimVisibility; value: unknown}>,
 ): Record<string, DisclosureData> {
   const root: Record<string, DisclosureData> = {};
 
@@ -453,6 +464,49 @@ function buildDisclosureTree(
   });
 
   return root;
+}
+
+/**
+ * Builds the input for flattenSdJwt.
+ *
+ * SD-JWT credentials already carry fullResolvedPayload, so they are passed
+ * through unchanged.
+ *
+ * mso_mdoc credentials have no fullResolvedPayload, so an equivalent payload
+ * is built from issuerSigned.nameSpaces, limited to the claims requested by
+ * the verifier. Element names (without the namespace) are used as keys,
+ * because buildDisclosureTree splits paths on '.', and mdoc namespaces
+ * (e.g. org.iso.18013.5.1) contain dots.
+ */
+function getFlattenInput(credential: any, claimsPath: Set<string>) {
+  const namespaces =
+    credential?.issuerSigned?.nameSpaces ?? credential?.nameSpaces;
+
+  if (!credential?.fullResolvedPayload && namespaces) {
+    const payload: Record<string, any> = {};
+    const keys: string[] = [];
+
+    Object.entries(namespaces).forEach(([ns, items]: [string, any]) => {
+      (items ?? []).forEach((item: any) => {
+        if (claimsPath.has(`${ns}.${item.elementIdentifier}`)) {
+          payload[item.elementIdentifier] = item.elementValue;
+          keys.push(item.elementIdentifier);
+        }
+      });
+    });
+
+    return {
+      eligiblePaths: new Set<string>(keys),
+      disclosedKeys: keys,
+      fullResolvedPayload: payload,
+    };
+  }
+
+  return {
+    eligiblePaths: claimsPath,
+    disclosedKeys: credential.disclosedKeys,
+    fullResolvedPayload: credential.fullResolvedPayload,
+  };
 }
 
 function buildDisclosureTreeForDisclosedClaims(paths: string[]) {
