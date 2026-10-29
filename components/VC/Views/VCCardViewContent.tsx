@@ -32,6 +32,7 @@ import {useCopilot} from 'react-native-copilot';
 import {useTranslation} from 'react-i18next';
 import testIDProps from '../../../shared/commonUtil';
 import {ClaimVisibility, flattenSdJwt} from '../common/VCProcessor';
+import {VCFormat} from '../../../shared/VCFormat';
 
 export const VCCardViewContent: React.FC<VCItemContentProps> = ({
                                                                   isPinned = false,
@@ -190,7 +191,7 @@ export const VCCardViewContent: React.FC<VCItemContentProps> = ({
         while (parts.length > 1) {
           parts.pop();
           const parent = parts.join('.');
-          if (credential.disclosedKeys.includes(parent)) {
+          if (credential.disclosedKeys?.includes(parent)) {
             updated[parent] = true;
           }
         }
@@ -222,6 +223,7 @@ export const VCCardViewContent: React.FC<VCItemContentProps> = ({
   const faceImage = verifiableCredentialData.face;
   const {start} = useCopilot();
   const {t} = useTranslation();
+  const isMdoc = vcMetadata?.format === VCFormat.mso_mdoc;
 
   function showDisclosedKeys() {
     return (
@@ -362,8 +364,12 @@ export const VCCardViewContent: React.FC<VCItemContentProps> = ({
             <Fragment>
               {claimsPath
                 ? Object.entries(
-                  buildDisclosureTree(
-                    flattenSdJwt(getFlattenInput(credential, claimsPath)),
+                  isMdoc ? flattenMdocClaims(credential, claimsPath) : buildDisclosureTree(
+                    flattenSdJwt({
+                      eligiblePaths: claimsPath,
+                      disclosedKeys: credential.disclosedKeys,
+                      fullResolvedPayload: credential.fullResolvedPayload,
+                    }),
                   ),
                 ).map(([name, node]: [string, any]) => (
                   <DisclosureNode
@@ -452,46 +458,45 @@ function buildDisclosureTree(
 }
 
 /**
- * Builds the input for flattenSdJwt.
+ * Builds the disclosure tree for mso_mdoc credentials from issuerSigned.nameSpaces,
+ * limited to the claims requested by the verifier.
  *
- * SD-JWT credentials already carry fullResolvedPayload, so they are passed
- * through unchanged.
- *
- * mso_mdoc credentials have no fullResolvedPayload, so an equivalent payload
- * is built from issuerSigned.nameSpaces, limited to the claims requested by
- * the verifier. Element names (without the namespace) are used as keys,
- * because buildDisclosureTree splits paths on '.', and mdoc namespaces
- * (e.g. org.iso.18013.5.1) contain dots.
+ * Claims are grouped under their namespace (e.g. org.iso.18013.5.1) instead of
+ * being keyed by elementIdentifier alone, so claims with the same name in
+ * different namespaces are not overwritten and are shown separately.
+ * The namespace is used as-is as the top-level key (not split on '.'), so each
+ * claim's full path stays `${namespace}.${elementIdentifier}`, the same format
+ * as claimsPath.
  */
-function getFlattenInput(credential: any, claimsPath: Set<string>) {
+function flattenMdocClaims(
+  credential: any,
+  claimsPath: Set<string>,
+): Record<string, DisclosureData> {
   const namespaces =
-    credential?.issuerSigned?.nameSpaces ?? credential?.nameSpaces;
+    credential?.issuerSigned?.nameSpaces ?? credential?.nameSpaces ?? {};
+  const root: Record<string, DisclosureData> = {};
 
-  if (!credential?.fullResolvedPayload && namespaces) {
-    const payload: Record<string, any> = {};
-    const keys: string[] = [];
-
-    Object.entries(namespaces).forEach(([ns, items]: [string, any]) => {
-      (items ?? []).forEach((item: any) => {
-        if (claimsPath.has(`${ns}.${item.elementIdentifier}`)) {
-          payload[item.elementIdentifier] = item.elementValue;
-          keys.push(item.elementIdentifier);
-        }
-      });
+  Object.entries(namespaces).forEach(([namespace, items]: [string, any]) => {
+    (items ?? []).forEach((item: any) => {
+      if (!claimsPath.has(`${namespace}.${item.elementIdentifier}`)) {
+        return;
+      }
+      root[namespace] ||= {
+        __self: false,
+        visibility: null,
+        value: undefined,
+        children: {},
+      };
+      root[namespace].children[item.elementIdentifier] = {
+        __self: true,
+        visibility: ClaimVisibility.PRIVATE,
+        value: item.elementValue,
+        children: {},
+      };
     });
+  });
 
-    return {
-      eligiblePaths: new Set<string>(keys),
-      disclosedKeys: keys,
-      fullResolvedPayload: payload,
-    };
-  }
-
-  return {
-    eligiblePaths: claimsPath,
-    disclosedKeys: credential.disclosedKeys,
-    fullResolvedPayload: credential.fullResolvedPayload,
-  };
+  return root;
 }
 
 function buildDisclosureTreeForDisclosedClaims(paths: string[]) {
